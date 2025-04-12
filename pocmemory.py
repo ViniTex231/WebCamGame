@@ -17,12 +17,17 @@ WRONG_PAIR_SHOW_TIME = 2
 EMOCOES = ['Raiva', 'Desprezo', 'Medo', 'Felicidade', 'Tristeza', 'Surpresa', 'Neutra']
 contador_emocoes = {emocao: 0 for emocao in EMOCOES}
 
+# Variável para armazenar a última emoção detectada
+ultima_emocao = None
+
 # Função para carregar modelo facial
 def carregar_modelo():
     return tf.keras.models.load_model('modelo_ferplus.h5')
 
 # Processa a expressão facial e atualiza contador
 def detectar_expressao(modelo, frame, face_detection):
+    global ultima_emocao  # Usando a variável global
+
     frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     resultados = face_detection.process(frame_rgb)
 
@@ -48,7 +53,12 @@ def detectar_expressao(modelo, frame, face_detection):
                 pred = modelo.predict(face, verbose=0)
                 idx = np.argmax(pred)
                 emocao = EMOCOES[idx]
-                contador_emocoes[emocao] += 1
+
+                # Verifica se a emoção mudou antes de atualizar o contador
+                if emocao != ultima_emocao:
+                    contador_emocoes[emocao] += 1
+                    ultima_emocao = emocao  # Atualiza a última emoção detectada
+
             except:
                 continue
 
